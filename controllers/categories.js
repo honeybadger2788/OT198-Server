@@ -12,6 +12,7 @@ const {
 } = require('../services/categories')
 
 const list = catchAsync(async (req, res) => {
+  const resource = req.baseUrl
   req.query.page = req.query.page || 1
   const categories = await listCategories(req.query.page)
   endpointResponse({
@@ -20,7 +21,7 @@ const list = catchAsync(async (req, res) => {
     status: true,
     message: 'Categories successfully retrieved',
     body: {
-      ...calculatePagination(req.query.page, categories.count),
+      ...calculatePagination(req.query.page, categories.count, resource),
       categories: categories.rows,
     },
   })
