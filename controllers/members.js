@@ -6,6 +6,7 @@ const { calculatePagination } = require('../utils/pagination')
 
 module.exports = {
   list: catchAsync(async (req, res) => {
+    const resource = req.baseUrl
     req.query.page = req.query.page || 1
     const members = await listMembers(req.query.page)
     endpointResponse({
@@ -14,7 +15,7 @@ module.exports = {
       status: true,
       message: 'Members successfully retrieved',
       body: {
-        ...calculatePagination(req.query.page, members.count),
+        ...calculatePagination(req.query.page, members.count, resource),
         members: members.rows,
       },
     })
