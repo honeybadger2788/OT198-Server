@@ -13,6 +13,7 @@ const testimonialRouter = require('./testimonial')
 const contactsRouter = require('./contacts')
 const commentsRouter = require('./comments')
 const membersRouter = require('./members')
+const swaggerRouter = require('./swagger')
 
 const router = express.Router()
 
@@ -58,5 +59,7 @@ router.use('/testimonials', testimonialRouter)
 router.use('/comments', commentsRouter)
 // members routes
 router.use('/members', membersRouter)
+// swagger routes
+router.use('/api/docs', swaggerRouter)
 
 module.exports = router
