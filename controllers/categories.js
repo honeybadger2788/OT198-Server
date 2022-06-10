@@ -1,5 +1,8 @@
 const createHttpError = require('http-errors')
+const httpStatus = require('../helpers/httpStatus')
 const { endpointResponse } = require('../helpers/success')
+const { catchAsync } = require('../helpers/catchAsync')
+const { calculatePagination } = require('../utils/pagination')
 const {
   listCategories,
   listCategoryById,
@@ -8,24 +11,20 @@ const {
   deleteCategory,
 } = require('../services/categories')
 
-const list = async (req, res, next) => {
-  try {
-    const categories = await listCategories()
-    endpointResponse({
-      res,
-      code: 200,
-      status: true,
-      message: 'Categories found',
-      body: categories,
-    })
-  } catch (error) {
-    const httpError = createHttpError(
-      error.statusCode,
-      `[Error retrieving categories] - [categories - GET]: ${error.message}`,
-    )
-    next(httpError)
-  }
-}
+const list = catchAsync(async (req, res) => {
+  req.query.page = req.query.page || 1
+  const categories = await listCategories(req.query.page)
+  endpointResponse({
+    res,
+    code: httpStatus.OK,
+    status: true,
+    message: 'Categories successfully retrieved',
+    body: {
+      ...calculatePagination(req.query.page, categories.count),
+      categories: categories.rows,
+    },
+  })
+})
 
 const listCategory = async (req, res, next) => {
   const { id } = req.params
