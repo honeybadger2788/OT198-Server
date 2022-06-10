@@ -42,7 +42,7 @@ module.exports = {
     )
     return endpointResponse({
       res,
-      code: 200,
+      code: httpStatus.OK,
       status: true,
       message: 'Testimonial updated successfully',
       body: updatedTestimonial,

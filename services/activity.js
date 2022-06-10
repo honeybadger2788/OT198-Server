@@ -4,31 +4,19 @@ const httpStatus = require('../helpers/httpStatus')
 
 module.exports = {
   listActivity: async () => {
-    try {
-      const activities = await Activity.findAll()
-      return activities
-    } catch (error) {
-      throw new Error(error)
-    }
+    const activities = await Activity.findAll()
+    return activities
   },
   postActivity: async (activity) => {
-    try {
-      const newActivity = await Activity.create(activity)
-      return newActivity
-    } catch (error) {
-      throw new ApiError(httpStatus.BAD_REQUEST, error.message)
-    }
+    const newActivity = await Activity.create(activity)
+    return newActivity
   },
   updateActivity: async (activity, id) => {
-    try {
-      const editActivity = await Activity.update(activity, {
-        where: { id },
-      })
-      if (editActivity[0] !== 1) throw new Error(`Activity ${id} not found`)
-      const activityUpdated = await Activity.findByPk(id)
-      return activityUpdated
-    } catch (error) {
-      throw new ApiError(httpStatus.NOT_FOUND, error.message)
-    }
+    const editActivity = await Activity.update(activity, {
+      where: { id },
+    })
+    if (editActivity[0] !== 1) throw new ApiError(httpStatus.NOT_FOUND, `Activity ${id} not found`)
+    const activityUpdated = await Activity.findByPk(id)
+    return activityUpdated
   },
 }

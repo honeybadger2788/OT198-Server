@@ -10,26 +10,17 @@ const httpStatus = require('../helpers/httpStatus')
 
 module.exports = {
   listSlide: async () => {
-    try {
-      return await Slide.findAll({ attributes: ['imageURL', 'order'] })
-    } catch (error) {
-      throw new Error(error)
-    }
+    const AllSlides = await Slide.findAll({ attributes: ['imageURL', 'order'] })
+    return AllSlides
   },
   listSlideByOrder: async () => {
-    try {
-      return await Slide.findAll({ order: [['order', 'ASC']] })
-    } catch (error) {
-      throw new ApiError(httpStatus.NOT_FOUND, 'Slides not found')
-    }
+    const orderedSlides = await Slide.findAll({ order: [['order', 'ASC']] })
+    return orderedSlides
   },
   listSlideById: async (id) => {
-    try {
-      const slide = await Slide.findByPk(id)
-      return slide
-    } catch (error) {
-      throw new Error(error)
-    }
+    const slide = await Slide.findByPk(id)
+    if (!slide) throw new ApiError(httpStatus.NOT_FOUND, 'Slide not found')
+    return slide
   },
 
   /**
@@ -70,7 +61,9 @@ module.exports = {
         attributes: [[sequelize.fn('MAX', sequelize.col('order')), 'maxOrder']],
         raw: true,
       })
-      if (!data.body.order) { data.body.order = maxOrder[0].maxOrder + 1 }
+      if (!data.body.order) {
+        data.body.order = maxOrder[0].maxOrder + 1
+      }
       const slide = await Slide.create(data.body)
       if (slide) {
         slide.imageURL = await uploadImageToS3(data)
@@ -78,18 +71,15 @@ module.exports = {
       }
       return slide.dataValues
     } catch (error) {
+      await unlinkFile(data.file.path)
       throw new ApiError(httpStatus.BAD_REQUEST, error.message)
     }
   },
   deleteSlide: async (id) => {
-    try {
-      const slide = await Slide.destroy({
-        where: { id },
-      })
-      if (slide !== 1) throw new Error(`Slide with id ${id} not found`)
-      return true
-    } catch (error) {
-      throw new ApiError(httpStatus.NOT_FOUND, error.message)
-    }
+    const slide = await Slide.destroy({
+      where: { id },
+    })
+    if (slide !== 1) throw new Error(`Slide with id ${id} not found`)
+    return true
   },
 }

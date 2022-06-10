@@ -1,22 +1,16 @@
-const createHttpError = require('http-errors')
 const { endpointResponse } = require('../helpers/success')
-const Role = require('../database/models/role')
+const { listRoles } = require('../services/role')
+const { catchAsync } = require('../helpers/catchAsync')
+const httpStatus = require('../helpers/httpStatus')
 
-const list = async (req, res, next) => {
-  try {
-    const roles = await Role.findAll()
+module.export = {
+  list: catchAsync(async (req, res) => {
+    const roles = await listRoles()
     endpointResponse({
       res,
-      code: 200,
+      code: httpStatus.OK,
       status: true,
       message: roles,
     })
-  } catch (err) {
-    const httpError = createHttpError(err.statusCode, `Error showing all roles: ${err.message}`)
-    next(httpError)
-  }
-}
-
-module.export = {
-  list,
+  }),
 }

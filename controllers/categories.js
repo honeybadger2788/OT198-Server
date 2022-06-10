@@ -1,108 +1,65 @@
-const createHttpError = require('http-errors')
+const { catchAsync } = require('../helpers/catchAsync')
 const { endpointResponse } = require('../helpers/success')
 const {
   listCategories,
   listCategoryById,
-  upDateCategory,
+  updateCategory,
   createCategory,
   deleteCategory,
 } = require('../services/categories')
+const httpStatus = require('../helpers/httpStatus')
 
-const list = async (req, res, next) => {
-  try {
+module.exports = {
+  list: catchAsync(async (req, res) => {
     const categories = await listCategories()
     endpointResponse({
       res,
-      code: 200,
+      code: httpStatus.OK,
       status: true,
       message: 'Categories found',
       body: categories,
     })
-  } catch (error) {
-    const httpError = createHttpError(
-      error.statusCode,
-      `[Error retrieving categories] - [categories - GET]: ${error.message}`,
-    )
-    next(httpError)
-  }
-}
-
-const listCategory = async (req, res, next) => {
-  const { id } = req.params
-  try {
+  }),
+  listCategory: catchAsync(async (req, res) => {
+    const { id } = req.params
     const response = await listCategoryById(id)
     endpointResponse({
       res,
-      ...response,
+      code: httpStatus.OK,
+      status: true,
+      message: 'Categories found',
+      body: response,
     })
-  } catch (error) {
-    const httpError = createHttpError(
-      error.statusCode,
-      `[Error with database] - [listCategory with ID - GET]: ${error.message}`,
-    )
-    next(httpError)
-  }
-}
-const update = async (req, res, next) => {
-  try {
+  }),
+  update: catchAsync(async (req, res) => {
     const { name, description, image } = req.body
-    const response = await upDateCategory({ name, description, image }, req.params.id)
+    const updatedCategory = await updateCategory({ name, description, image }, req.params.id)
     endpointResponse({
       res,
-      ...response,
+      code: httpStatus.OK,
+      message: 'Category updated',
+      body: updatedCategory,
     })
-  } catch (error) {
-    const httpError = createHttpError(
-      error.statusCode,
-      `[Error with database] - [Edit Category - PUT]: ${error.message}`,
-    )
-    next(httpError)
-  }
-}
-
-const post = async (req, res, next) => {
-  try {
+  }),
+  post: catchAsync(async (req, res) => {
     const { name, description, image } = req.body
     const category = await createCategory({ name, description, image })
     endpointResponse({
       res,
-      code: 201,
+      code: httpStatus.CREATED,
       status: true,
       message: 'Category created',
       body: category,
     })
-  } catch (error) {
-    const httpError = createHttpError(
-      error.statusCode,
-      `[Error with database] - [create Category - POST]: ${error.message}`,
-    )
-    next(httpError)
-  }
-}
-
-const destroy = async (req, res, next) => {
-  const { id } = req.params
-  try {
-    const { code, status, message } = await deleteCategory(id)
+  }),
+  destroy: catchAsync(async (req, res) => {
+    const { id } = req.params
+    await deleteCategory(id)
     endpointResponse({
       res,
-      code,
-      status,
-      message,
+      code: httpStatus.OK,
+      status: true,
+      message: 'Category deleted',
     })
-  } catch (error) {
-    const httpError = createHttpError(
-      error.statusCode,
-      `[Error with database] - [delete Category - DELETE]: ${error.message}`,
-    )
-    next(httpError)
-  }
-}
-
-module.exports = {
-  list,
-  listCategory,
-  update,
-  post,
-  destroy,
+  }),
 }

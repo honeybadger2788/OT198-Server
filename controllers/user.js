@@ -1,4 +1,5 @@
-const createHttpError = require('http-errors')
+const httpStatus = require('../helpers/httpStatus')
+const { catchAsync } = require('../helpers/catchAsync')
 const { endpointResponse } = require('../helpers/success')
 const {
   createUser,
@@ -7,119 +8,68 @@ const {
   updateUser,
   getAllUsers,
 } = require('../services/user')
+const { decodeToken } = require('../middlewares/jwt')
 
 module.exports = {
-  list: async (req, res, next) => {
-    try {
-      const {
-        code, status, message, body,
-      } = await getAllUsers()
-      endpointResponse({
-        res,
-        code,
-        status,
-        message,
-        body,
-      })
-    } catch (error) {
-      const httpError = createHttpError(
-        error.statusCode,
-        `[Error getting all users] - [users - GET]: ${error.message}`,
-      )
-      next(httpError)
-    }
-  },
-  post: async (req, res, next) => {
-    try {
-      const userToken = await createUser(req.body)
-      endpointResponse({
-        res,
-        code: 200,
-        status: true,
-        message: 'User created',
-        body: { userToken },
-      })
-    } catch (error) {
-      const httpError = createHttpError(
-        error.statusCode,
-        `[Error posting new user] - [users - POST]: ${error.message}`,
-      )
-      next(httpError)
-    }
-  },
-  login: async (req, res, next) => {
+  list: catchAsync(async (req, res) => {
+    const users = await getAllUsers()
+    endpointResponse({
+      res,
+      code: httpStatus.OK,
+      status: true,
+      message: 'User created',
+      body: users,
+    })
+  }),
+  post: catchAsync(async (req, res) => {
+    const userToken = await createUser(req.body)
+    endpointResponse({
+      res,
+      code: httpStatus.CREATED,
+      status: true,
+      message: 'User created',
+      body: { userToken },
+    })
+  }),
+  login: catchAsync(async (req, res) => {
     const { email, password } = req.body
-    try {
-      const {
-        code, status, message, body,
-      } = await getUserWithEmail({ email, password })
-      endpointResponse({
-        res,
-        code,
-        status,
-        message,
-        body,
-      })
-    } catch (error) {
-      const httpError = createHttpError(
-        error.statusCode,
-        `[Error logging in user] - [users - tryLogin]: ${error.message}`,
-      )
-      next(httpError)
-    }
-  },
-  put: async (req, res, next) => {
-    try {
-      const user = await updateUser(req)
-      endpointResponse({
-        res,
-        code: 200,
-        status: true,
-        message: 'User updated',
-        body: user,
-      })
-    } catch (error) {
-      const httpError = createHttpError(
-        error.statusCode,
-        `[Error updating user] - [users - PUT]: ${error.message}`,
-      )
-      next(httpError)
-    }
-  },
-  destroy: async (req, res, next) => {
+    const { user, token } = await getUserWithEmail({ email, password })
+    endpointResponse({
+      res,
+      code: httpStatus.OK,
+      status: true,
+      message: 'User logged in',
+      body: { user, token },
+    })
+  }),
+  put: catchAsync(async (req, res) => {
+    const user = await updateUser(req)
+    endpointResponse({
+      res,
+      code: httpStatus.OK,
+      status: true,
+      message: 'User updated',
+      body: user,
+    })
+  }),
+  destroy: catchAsync(async (req, res) => {
     const { id } = req.params
-    try {
-      const { code, status, message } = await deleteUser(id)
-      endpointResponse({
-        res,
-        code,
-        status,
-        message,
-      })
-    } catch (error) {
-      const httpError = createHttpError(
-        error.statusCode,
-        `[Error deleting user] - [users - DELETE]: ${error.message}`,
-      )
-      next(httpError)
-    }
-  },
-  userDataByToken: async (req, res, next) => {
-    try {
-      const { user } = req
-      endpointResponse({
-        res,
-        code: 200,
-        status: true,
-        message: 'User retrieved successfully',
-        body: user,
-      })
-    } catch (error) {
-      const httpError = createHttpError(
-        error.statusCode,
-        `[Error retrieving user authenticated] - [userDataByToken - GET]: ${error.message}`,
-      )
-      next(httpError)
-    }
-  },
+    await deleteUser(id)
+    endpointResponse({
+      res,
+      code: httpStatus.OK,
+      status: true,
+      message: 'User deleted',
+    })
+  }),
+  userDataByToken: catchAsync(async (req, res) => {
+    const user = decodeToken(req)
+    endpointResponse({
+      res,
+      code: httpStatus.OK,
+      status: true,
+      message: 'User retrieved successfully',
+      body: user,
+    })
+  }),
 }

@@ -1,34 +1,28 @@
-const db = require('../database/models')
-
-const { Organization } = db
+const { Organization } = require('../database/models')
+const ApiError = require('../helpers/ApiError')
+const httpStatus = require('../helpers/httpStatus')
 
 module.exports = {
   listOrganization: async () => {
-    try {
-      return await Organization.findAll({
-        attributes: [
-          'name',
-          'image',
-          'phone',
-          'address',
-          'facebookUrl',
-          'instagramUrl',
-          'linkedinUrl',
-        ],
-      })
-    } catch (error) {
-      throw new Error(error)
-    }
+    const allOrganizations = await Organization.findAll({
+      attributes: [
+        'name',
+        'image',
+        'phone',
+        'address',
+        'facebookUrl',
+        'instagramUrl',
+        'linkedinUrl',
+      ],
+    })
+    return allOrganizations
   },
+
   updateOrganization: async (id, newData) => {
-    try {
-      const updatedData = await Organization.update(newData, { where: { id: `${id}` } })
-      const [result] = updatedData
-      return result === 1
-        ? { code: 200, status: true, message: 'Organization Updated' }
-        : { code: 404, status: false, message: 'Organization not found' }
-    } catch (error) {
-      throw new Error(error)
-    }
+    const updatedData = await Organization.update(newData, { where: { id: `${id}` } })
+    const [result] = updatedData
+    if (result !== 1) throw new ApiError(httpStatus.NOT_FOUND, 'Organization not found')
+    const updatedOrganization = await Organization.findByPk(id)
+    return updatedOrganization
   },
 }

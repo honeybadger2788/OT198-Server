@@ -1,71 +1,36 @@
-const db = require('../database/models')
+const { Category } = require('../database/models')
+const ApiError = require('../helpers/ApiError')
+const httpStatus = require('../helpers/httpStatus')
 
-const { Category } = db
-// todo - create a error handler
-const listCategoryById = async (id) => {
-  try {
-    const category = await Category.findByPk(id)
-    return category
-      ? {
-        code: 200,
-        status: true,
-        message: 'Category found',
-        body: category,
-      }
-      : { code: 404, status: false, message: `Category with id ${id} not found` }
-  } catch (error) {
-    throw new Error(error)
-  }
-}
-
-const listCategories = async () => {
-  try {
+module.exports = {
+  listCategories: async () => {
     const categories = await Category.findAll({ attributes: ['name'] })
     return categories
-  } catch (error) {
-    throw new Error(error)
-  }
-}
-
-const upDateCategory = async (categoryToEdit, id) => {
-  try {
+  },
+  listCategoryById: async (id) => {
+    const category = await Category.findByPk(id)
+    if (!category) throw new ApiError(404, 'Category not found')
+    return category
+  },
+  updateCategory: async (categoryToEdit, id) => {
     const editCategory = await Category.update(categoryToEdit, {
       where: { id },
     })
-    return editCategory[0] === 1
-      ? { code: 200, status: true, message: 'Category edited' }
-      : { code: 404, status: false, message: `Category ${id} not found` }
-  } catch (error) {
-    throw new Error(error)
-  }
-}
-
-const createCategory = async (category) => {
-  try {
+    if (editCategory[0] !== 1) {
+      throw new ApiError(httpStatus.NOT_FOUND, `Category with id ${id} not found`)
+    }
+    const updatedCategory = this.listCategoryById(id)
+    return updatedCategory
+  },
+  createCategory: async (category) => {
     const newCategory = await Category.create(category)
     return newCategory
-  } catch (error) {
-    throw new Error(error)
-  }
-}
-
-const deleteCategory = async (id) => {
-  try {
+  },
+  deleteCategory: async (id) => {
     const user = await Category.destroy({
       where: { id },
     })
-    return user === 1
-      ? { code: 200, status: true, message: 'Category deleted' }
-      : { code: 404, status: false, message: `Category with id ${id} not found` }
-  } catch (error) {
-    throw new Error(error)
-  }
-}
-
-module.exports = {
-  listCategories,
-  listCategoryById,
-  upDateCategory,
-  createCategory,
-  deleteCategory,
+    if (user !== 1) throw new ApiError(httpStatus.NOT_FOUND, `Category with id ${id} not found`)
+    return user
+  },
 }

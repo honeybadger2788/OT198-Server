@@ -1,49 +1,35 @@
-const createHttpError = require('http-errors')
 const { endpointResponse } = require('../helpers/success')
 const { catchAsync } = require('../helpers/catchAsync')
 const {
-  listSlide, listSlideById, updateSlide, createSlide, deleteSlide,
+  listSlide,
+  listSlideById,
+  updateSlide,
+  createSlide,
+  deleteSlide,
 } = require('../services/slide')
 const httpStatus = require('../helpers/httpStatus')
 
 module.exports = {
-  list: catchAsync(async (req, res, next) => {
-    try {
-      const publicData = await listSlide()
-      endpointResponse({
-        res,
-        code: 200,
-        status: true,
-        message: 'Slides public data retrieved successfully',
-        body: publicData,
-      })
-    } catch (error) {
-      const httpError = createHttpError(
-        error.statusCode,
-        `[Error retrieving slide public data] - [slide - listPublic]: ${error.message}`,
-      )
-      next(httpError)
-    }
+  list: catchAsync(async (req, res) => {
+    const publicData = await listSlide()
+    endpointResponse({
+      res,
+      code: httpStatus.OK,
+      status: true,
+      message: 'Slides public data retrieved successfully',
+      body: publicData,
+    })
   }),
-  listById: catchAsync(async (req, res, next) => {
+  listById: catchAsync(async (req, res) => {
     const { id } = req.params
-    try {
-      const slide = await listSlideById(id)
-      if (!slide) throw next(createHttpError(404, `Slide with id ${id} not found`))
-      endpointResponse({
-        res,
-        code: 200,
-        status: true,
-        message: 'Slide found',
-        body: slide,
-      })
-    } catch (error) {
-      const httpError = createHttpError(
-        error.statuscode,
-        `[Error retrieving slide] - [listSlide By Id - GET]: ${error.message}`,
-      )
-      next(httpError)
-    }
+    const slide = await listSlideById(id)
+    endpointResponse({
+      res,
+      code: httpStatus.OK,
+      status: true,
+      message: 'Slide found',
+      body: slide,
+    })
   }),
   update: catchAsync(async (req, res) => {
     const { id } = req.params
@@ -68,23 +54,15 @@ module.exports = {
       body: updatedSlide,
     })
   }),
-  post: catchAsync(async (req, res, next) => {
-    try {
-      const slide = await createSlide(req)
-      endpointResponse({
-        res,
-        code: 200,
-        status: true,
-        message: 'Slide created',
-        body: slide,
-      })
-    } catch (error) {
-      const httpError = createHttpError(
-        error.statusCode,
-        `[Error posting new slide] - [slide - POST]: ${error.message}`,
-      )
-      next(httpError)
-    }
+  post: catchAsync(async (req, res) => {
+    const slide = await createSlide(req)
+    endpointResponse({
+      res,
+      code: httpStatus.OK,
+      status: true,
+      message: 'Slide created',
+      body: slide,
+    })
   }),
   destroy: catchAsync(async (req, res) => {
     const { id } = req.params
