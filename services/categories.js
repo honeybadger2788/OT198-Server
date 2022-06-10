@@ -18,13 +18,14 @@ const listCategoryById = async (id) => {
   }
 }
 
-const listCategories = async () => {
-  try {
-    const categories = await Category.findAll({ attributes: ['name'] })
-    return categories
-  } catch (error) {
-    throw new Error(error)
-  }
+const listCategories = async (page) => {
+  const allCategories = await Category.findAndCountAll({
+    attributes: ['name'],
+    limit: 10,
+    offset: 10 * (page - 1),
+    order: [['createdAt', 'DESC']],
+  })
+  return allCategories
 }
 
 const upDateCategory = async (categoryToEdit, id) => {
