@@ -20,8 +20,8 @@ const router = express.Router()
 // Middlewares
 const { auth } = require('../middlewares/auth')
 
-// example of a route with index controller get function
 router.get('/', get)
+// example of a route with index controller get function
 router.use('/ping', auth, pingRouter)
 
 // categories routes
@@ -62,4 +62,5 @@ router.use('/members', membersRouter)
 // swagger routes
 router.use('/api/docs', swaggerRouter)
 
+router.get('*', (req, res) => res.redirect('/api/docs'))
 module.exports = router
